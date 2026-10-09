@@ -3,3 +3,4 @@ minio/data/
 
 # Environment variables
 .env
+.venv

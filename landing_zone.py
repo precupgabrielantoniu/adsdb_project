@@ -19,6 +19,10 @@ else: raise
 #For file in folder 
 
     #Hugging face
+from datasets import load_dataset
+
+
+dataset = load_dataset("cgeorgiaw/animal-sounds", "birds")
 
 
 #Put in bucket =)
