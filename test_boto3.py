@@ -1,12 +1,19 @@
-import boto3 #type:ignore  
+import os
+import boto3 #type:ignore
 from botocore.client import Config #type:ignore
+from dotenv import load_dotenv #type:ignore
 
+load_dotenv()
+
+MINIO_ENDPOINT_URL = os.environ['MINIO_ENDPOINT_URL']
+MINIO_ROOT_USER = os.environ['MINIO_ROOT_USER']
+MINIO_ROOT_PASSWORD = os.environ['MINIO_ROOT_PASSWORD']
 
 #List all buckets and get one bucket
 s3 = boto3.client('s3',
-                  endpoint_url='http://localhost:9000',
-                  aws_access_key_id='minioadmin',
-                  aws_secret_access_key='LaGaBTh6667')
+                  endpoint_url=MINIO_ENDPOINT_URL,
+                  aws_access_key_id=MINIO_ROOT_USER,
+                  aws_secret_access_key=MINIO_ROOT_PASSWORD)
 
 response = s3.list_buckets()
 
@@ -37,9 +44,9 @@ def upload_file(file_name, bucket, object_name=None):
 
     # Upload the file
     s3_client = boto3.client('s3',
-                  endpoint_url='http://localhost:9000',
-                  aws_access_key_id='minioadmin',
-                  aws_secret_access_key='minioadmin')
+                  endpoint_url=MINIO_ENDPOINT_URL,
+                  aws_access_key_id=MINIO_ROOT_USER,
+                  aws_secret_access_key=MINIO_ROOT_PASSWORD)
     try:
         response = s3_client.upload_file(file_name, bucket, object_name)
     except ClientError as e:

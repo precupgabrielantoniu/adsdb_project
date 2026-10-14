@@ -1,0 +1,8 @@
+I put the passwords in the environment i dont think its needed but it's good practices?
+You will need to pip install python-dotenv and create a .env file with the following content:
+
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=LaGaBTh6667
+MINIO_ENDPOINT_URL=http://localhost:9000
+
+ups hope it works =)
