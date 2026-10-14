@@ -3,3 +3,4 @@ python-dotenv==0.21.0
 datasets==5.1.0
 torch==2.14.1
 torchcodec==0.17.0
+pillow==12.3.0
