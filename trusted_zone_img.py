@@ -8,6 +8,7 @@ import boto3 #type:ignore
 from botocore.client import Config #type:ignore
 from botocore.exceptions import ClientError #type:ignore
 from PIL import Image, ImageStat
+from tqdm import tqdm #type:ignore
 
 from config import MINIO_ENDPOINT_URL, MINIO_ROOT_PASSWORD, MINIO_ROOT_USER #type:ignore
 
@@ -38,54 +39,62 @@ except ClientError:
 image_records = []   # One dict per readable image: {key, width, height, hash}
 corrupt_keys = []    # Keys of images that failed to decode at all
 
+#Count total images for the progress bar
+count_paginator = s3.get_paginator('list_objects_v2')
+total_images = sum(
+    len(page.get('Contents', []))
+    for page in count_paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX)
+)
+
 #Set a low boundry for flat images
 FLAT_STDDEV_THRESHOLD = 5
 #download each image once, check it's readable, and record its hash and size
 paginator = s3.get_paginator('list_objects_v2')
-for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
-    print(f"Checking {len(paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX))} images for quality")
-    for image in page.get('Contents', []):
-        key = image['Key']
-        image_bytes = s3.get_object(Bucket=SOURCE_BUCKET, Key=key)['Body'].read()
+with tqdm(total=total_images, desc=f"Checking corruption and pixel variance") as progress:
+    for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
+        for image in page.get('Contents', []):
+            key = image['Key']
+            image_bytes = s3.get_object(Bucket=SOURCE_BUCKET, Key=key)['Body'].read()
 
-        #use.load() to raise an error if the file is truncated or otherwise broken.
-        try:
-            img = Image.open(BytesIO(image_bytes))
-            img.load()
-        except Exception:
-            corrupt_keys.append(key)
-            continue
+            #use.load() to raise an error if the file is truncated or otherwise broken.
+            try:
+                img = Image.open(BytesIO(image_bytes))
+                img.load()
+            except Exception:
+                corrupt_keys.append(key)
+                continue
 
-        #Keep MD5 of the raw bytes to assert duplicates
-        content_hash = hashlib.md5(image_bytes).hexdigest()
+            #Keep MD5 of the raw bytes to assert duplicates
+            content_hash = hashlib.md5(image_bytes).hexdigest()
 
-        #convert to grayscale and measure how spread out the pixel values are (standard deviation)
-        width, height = img.size
-        gray = img.convert("L")
-        global_stddev = ImageStat.Stat(gray).stddev[0]
+            #convert to grayscale and measure how spread out the pixel values are (standard deviation)
+            width, height = img.size
+            gray = img.convert("L")
+            global_stddev = ImageStat.Stat(gray).stddev[0]
 
-        #Check variance in a grid of four
-        half_w, half_h = width // 2, height // 2
-        quadrants = [
-            gray.crop((0, 0, half_w, half_h)),
-            gray.crop((half_w, 0, width, half_h)),
-            gray.crop((0, half_h, half_w, height)),
-            gray.crop((half_w, half_h, width, height)),]
-        quadrant_stddevs = [ImageStat.Stat(q).stddev[0] for q in quadrants]
+            #Check variance in a grid of four
+            half_w, half_h = width // 2, height // 2
+            quadrants = [
+                gray.crop((0, 0, half_w, half_h)),
+                gray.crop((half_w, 0, width, half_h)),
+                gray.crop((0, half_h, half_w, height)),
+                gray.crop((half_w, half_h, width, height)),]
+            quadrant_stddevs = [ImageStat.Stat(q).stddev[0] for q in quadrants]
 
-        #if it has low enough variation mark the image as blank or a solid colour 
-        is_flat = global_stddev < FLAT_STDDEV_THRESHOLD 
-        #if any of the grids has the same property flag the image as partly blank
-        is_part_flat = any(s < FLAT_STDDEV_THRESHOLD for s in quadrant_stddevs)
+            #if it has low enough variation mark the image as blank or a solid colour 
+            is_flat = global_stddev < FLAT_STDDEV_THRESHOLD 
+            #if any of the grids has the same property flag the image as partly blank
+            is_part_flat = any(s < FLAT_STDDEV_THRESHOLD for s in quadrant_stddevs)
 
-        image_records.append({
-            "key": key,
-            "width": width,
-            "height": height,
-            "hash": content_hash,
-            "is_flat": is_flat,
-            "is_part_flat" : is_part_flat,
-        })
+            image_records.append({
+                "key": key,
+                "width": width,
+                "height": height,
+                "hash": content_hash,
+                "is_flat": is_flat,
+                "is_part_flat" : is_part_flat,
+            })
+            progress.update(1)#Update the progress bar
 
 #Detect duplicate hashes (same images) and mark the duplicated
 print("Detecting duplicates")
@@ -116,16 +125,18 @@ print(f"  Corrupt (unreadable): {len(corrupt_keys)}")
 print(f"  Duplicates: {sum(r['is_duplicate'] for r in image_records)}")
 print(f"  Size outliers: {sum(r['is_size_outlier'] for r in image_records)}")
 print(f"  Flat/blank image: {sum(r['is_flat'] for r in image_records)}")
-print(f"  Partly flat/blank image: {sum(r['is_part_flat'] for r in image_records)}")
+print(f"  Partly flat/blank image: {sum(r['is_part_flat'] for r in image_records)}\n")
 
-for record in image_records: #For every image
-    if record["is_duplicate"]: #If it is duplicated do not save it
-        continue
-    #save the non duplicated non corrupt images to the trusted zone (others will be saved just reported on)
-    target_key = f"{TARGET_PREFIX}{os.path.basename(record['key'])}"
-    s3.copy_object(
-        Bucket=TARGET_BUCKET,
-        CopySource={"Bucket": SOURCE_BUCKET, "Key": record["key"]},
-        Key=target_key,
-    )
+with tqdm(total=total_images, desc=f"Moving {total_images} to {TARGET_BUCKET}") as progress:
+    for record in image_records: #For every image
+        if record["is_duplicate"]: #If it is duplicated do not save it
+            continue
+        #save the non duplicated non corrupt images to the trusted zone (others will be saved just reported on)
+        target_key = f"{TARGET_PREFIX}{os.path.basename(record['key'])}"
+        s3.copy_object(
+            Bucket=TARGET_BUCKET,
+            CopySource={"Bucket": SOURCE_BUCKET, "Key": record["key"]},
+            Key=target_key,
+        )
+        progress.update(1)#Update the progress bar
 #endregion

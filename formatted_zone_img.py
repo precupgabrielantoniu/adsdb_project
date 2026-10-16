@@ -6,6 +6,7 @@ from PIL import Image #type:ignore
 import boto3 #type:ignore
 from botocore.client import Config #type:ignore
 from botocore.exceptions import ClientError #type:ignore
+from tqdm import tqdm #type:ignore
 
 from dotenv import load_dotenv #type:ignore
 
@@ -43,28 +44,32 @@ def to_jpg(image_bytes):
     img.save(buffer, format="JPEG", quality=90)
     buffer.seek(0)
     return buffer
-print("Transformed all images to jpg")
+
+#Count total images for the progress bar
+count_paginator = s3.get_paginator('list_objects_v2')
+total_images = sum(
+    len(page.get('Contents', []))
+    for page in count_paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX)
+)
 
 #Pick all of the images from the bucket, convert each to .jpg, and upload them to the formatted zone
 paginator = s3.get_paginator('list_objects_v2')
-for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
-    print(f"Moving {len(page.get('Contents', []))} images to the {TARGET_BUCKET}")
-    counter = 0
-    for image in page.get('Contents', []):
-        #Get the image
-        key = image['Key']
-        source_object = s3.get_object(Bucket=SOURCE_BUCKET, Key=key)
-        image_bytes = source_object['Body'].read()
+with tqdm(total=total_images, desc=f"Moving images to {TARGET_BUCKET}") as progress:
+    for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
+        for image in page.get('Contents', []):
+            #Get the image
+            key = image['Key']
+            source_object = s3.get_object(Bucket=SOURCE_BUCKET, Key=key)
+            image_bytes = source_object['Body'].read()
 
-        #Transform the image into jpg no matter the type
-        jpg_image = to_jpg(image_bytes)
+            #Transform the image into jpg no matter the type
+            jpg_image = to_jpg(image_bytes)
 
-        #Save the image to the formatted zone 
-        file_stem = os.path.splitext(os.path.basename(key))[0]
-        target_key = f"{TARGET_PREFIX}{file_stem}.jpg"
-        s3.upload_fileobj(jpg_image, TARGET_BUCKET, target_key) #Access to the bucket was checked previously
+            #Save the image to the formatted zone
+            file_stem = os.path.splitext(os.path.basename(key))[0]
+            target_key = f"{TARGET_PREFIX}{file_stem}.jpg"
+            s3.upload_fileobj(jpg_image, TARGET_BUCKET, target_key) #Access to the bucket was checked previously
 
-        counter += 1
-        if counter%50 == 0: print(f"Moved {counter}/{len(page.get('Contents', []))} images")
+            progress.update(1)#Update the progress bar
 
 print(f"Loaded all images to {TARGET_BUCKET}")
