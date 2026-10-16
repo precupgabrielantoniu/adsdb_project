@@ -14,6 +14,7 @@ client.bucket_exists(SOURCE_BUCKET)
 TARGET_BUCKET = "formatted-zone"
 TARGET_PREFIX = "audio/"
 client.bucket_exists(TARGET_BUCKET, True)
+print("Connection to buckets achieved")
 
 
 def to_wav(audio_bytes):

@@ -18,6 +18,6 @@ class S3Client:
         except ClientError:
             if create:
                 self.s3.create_bucket(Bucket=bucket_name)
-                print("Created bucket for the Formatted Zone")
+                print("Created bucket for " + bucket_name)
             else:
-                raise Exception("Landing Zone bucket does not exist")
+                raise Exception(bucket_name + " bucket does not exist")
