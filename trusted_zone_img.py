@@ -43,6 +43,7 @@ FLAT_STDDEV_THRESHOLD = 5
 #download each image once, check it's readable, and record its hash and size
 paginator = s3.get_paginator('list_objects_v2')
 for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
+    print(f"Checking {len(paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX))} images for quality")
     for image in page.get('Contents', []):
         key = image['Key']
         image_bytes = s3.get_object(Bucket=SOURCE_BUCKET, Key=key)['Body'].read()
@@ -87,12 +88,14 @@ for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
         })
 
 #Detect duplicate hashes (same images) and mark the duplicated
+print("Detecting duplicates")
 seen_hashes = set()
 for record in image_records:
     record["is_duplicate"] = record["hash"] in seen_hashes
     seen_hashes.add(record["hash"])
 
 #find outliers by size
+print("Detecting size outliers")
 areas = sorted(r["width"] * r["height"] for r in image_records if not r["is_duplicate"]) #get all sizes in order
 
 if areas: #use IQR to determine a range for the outliers
@@ -108,7 +111,7 @@ for record in image_records: #Check each image is within the range and flag thos
     record["is_size_outlier"] = area < lower_bound or area > upper_bound
 
 #Print a small summary with the information found
-print(f"Checked {len(image_records) + len(corrupt_keys)} images")
+print(f"\nChecked {len(image_records) + len(corrupt_keys)} images")
 print(f"  Corrupt (unreadable): {len(corrupt_keys)}")
 print(f"  Duplicates: {sum(r['is_duplicate'] for r in image_records)}")
 print(f"  Size outliers: {sum(r['is_size_outlier'] for r in image_records)}")

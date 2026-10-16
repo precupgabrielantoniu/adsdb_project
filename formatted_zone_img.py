@@ -34,7 +34,8 @@ except ClientError:
     #If the bucket does not exist then this might be the first time the script is being run so create it
     s3.create_bucket(Bucket = "formatted-zone")
     print("Created bucket for the Formatted Zone")
-    
+print("Connection to buckets achieved")
+
 def to_jpg(image_bytes):
     """Converts raw image bytes of any Pillow-supported static format to JPEG bytes."""
     img = Image.open(BytesIO(image_bytes)).convert("RGB") #For alpha channels
@@ -42,10 +43,13 @@ def to_jpg(image_bytes):
     img.save(buffer, format="JPEG", quality=90)
     buffer.seek(0)
     return buffer
+print("Transformed all images to jpg")
 
 #Pick all of the images from the bucket, convert each to .jpg, and upload them to the formatted zone
 paginator = s3.get_paginator('list_objects_v2')
 for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
+    print(f"Moving {len(page.get('Contents', []))} images to the {TARGET_BUCKET}")
+    counter = 0
     for image in page.get('Contents', []):
         #Get the image
         key = image['Key']
@@ -59,3 +63,8 @@ for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
         file_stem = os.path.splitext(os.path.basename(key))[0]
         target_key = f"{TARGET_PREFIX}{file_stem}.jpg"
         s3.upload_fileobj(jpg_image, TARGET_BUCKET, target_key) #Access to the bucket was checked previously
+
+        counter += 1
+        if counter%50 == 0: print(f"Moved {counter}/{len(page.get('Contents', []))} images")
+
+print(f"Loaded all images to {TARGET_BUCKET}")
