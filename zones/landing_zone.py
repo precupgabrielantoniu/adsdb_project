@@ -29,7 +29,7 @@ snapshot_download("cgeorgiaw/animal-sounds", repo_type="dataset", allow_patterns
 snapshot_download("ardavkocak/animalimages", repo_type="dataset", allow_patterns="data/*", local_dir="downloaded_data/images/huggingface/animalimages")
 snapshot_download("nirmalendu01/animal_dataset", repo_type="dataset", allow_patterns="data/*", local_dir="downloaded_data/text/huggingface/animal-dataset")
 snapshot_download("PenguinPush/animals-info", repo_type="dataset", allow_patterns="*.csv", local_dir="downloaded_data/text/huggingface/animals-info")
-kagglehub.dataset_download("kennyloic/animal-species-data", output_dir="downloaded_data/text/kaggle/animal-species-data")
+kagglehub.dataset_download("kennyloic/animal-species-data", output_dir="../downloaded_data/text/kaggle/animal-species-data")
 
 #Dump every file as temporal_landing/<media_type>/<source>/<dataset>/<original path>
 for path in Path("downloaded_data").rglob("*"):

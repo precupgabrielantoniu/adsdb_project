@@ -54,4 +54,4 @@ def upload_file(file_name, bucket, object_name=None):
         return False
     return True
 
-upload_file("landing_zone.py", 'test')
+upload_file("zones/landing_zone.py", 'test')
