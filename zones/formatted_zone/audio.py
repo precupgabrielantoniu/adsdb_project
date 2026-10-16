@@ -1,24 +1,19 @@
 import os
 
-from botocore.exceptions import ClientError#type:ignore
 from zones.client import S3Client
 from io import BytesIO
-from pydub import AudioSegment #type:ignore
+from pydub import AudioSegment
 
-s3 = S3Client.s3
+client = S3Client()
+s3 = client.s3
 
 SOURCE_BUCKET = "landing-zone"
 SOURCE_PREFIX = "persistent_landing/audio/"
-try: s3.head_bucket(Bucket=SOURCE_BUCKET)
-except ClientError: raise Exception("Landing Zone bucket does not exist")
+client.bucket_exists(SOURCE_BUCKET)
 
 TARGET_BUCKET = "formatted-zone"
 TARGET_PREFIX = "audio/"
-try: s3.head_bucket(Bucket=TARGET_BUCKET)
-except ClientError:
-    # create bucket if not exist
-    s3.create_bucket(Bucket=TARGET_BUCKET)
-    print("Created bucket for the Formatted Zone")
+client.bucket_exists(TARGET_BUCKET, True)
 
 
 def to_wav(audio_bytes):
