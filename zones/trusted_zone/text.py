@@ -10,6 +10,7 @@ from botocore.client import Config #type:ignore
 from botocore.exceptions import ClientError #type:ignore
 
 from dotenv import load_dotenv #type:ignore
+from zones.client import S3Client #type:ignore
 
 load_dotenv()
 
@@ -18,10 +19,7 @@ MINIO_ENDPOINT_URL = os.environ['MINIO_ENDPOINT_URL']
 MINIO_ROOT_USER = os.environ['MINIO_ROOT_USER']
 MINIO_ROOT_PASSWORD = os.environ['MINIO_ROOT_PASSWORD']
 
-s3 = boto3.client('s3',
-                  endpoint_url=MINIO_ENDPOINT_URL,
-                  aws_access_key_id=MINIO_ROOT_USER,
-                  aws_secret_access_key=MINIO_ROOT_PASSWORD)
+s3 = S3Client.s3
 
 #Check existence and set up the source (landing zone) and target (formatted zone) buckets and "folders"
 SOURCE_BUCKET = "formatted-zone"
@@ -111,7 +109,7 @@ for attribute, counts in sorted(attribute_stats.items(),
     print(f"  {attribute}: {counts['empty']}/{total} empty ({rate:.0%})")
 
 with tqdm(total=total_text, desc=f"Moving {total_text} to {TARGET_BUCKET}") as progress:
-    for record in text_records: #For every image
+    for record in text_records: #For every text
         #save the text to the target bucket
         target_key = f"{TARGET_PREFIX}{os.path.basename(record['key'])}"
         s3.copy_object(

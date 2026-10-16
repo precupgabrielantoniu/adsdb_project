@@ -10,13 +10,11 @@ from botocore.exceptions import ClientError #type:ignore
 from PIL import Image, ImageStat
 from tqdm import tqdm #type:ignore
 
-from config import MINIO_ENDPOINT_URL, MINIO_ROOT_PASSWORD, MINIO_ROOT_USER #type:ignore
+from config import MINIO_ENDPOINT_URL, MINIO_ROOT_PASSWORD, MINIO_ROOT_USER
+from zones.client import S3Client #type:ignore
 
 #Set up the connection with minio
-s3 = boto3.client('s3',
-                  endpoint_url=MINIO_ENDPOINT_URL,
-                  aws_access_key_id=MINIO_ROOT_USER,
-                  aws_secret_access_key=MINIO_ROOT_PASSWORD)
+s3 = S3Client.s3
 
 #Check existence and set up the source (landing zone) and target (formatted zone) buckets and "folders"
 SOURCE_BUCKET = "formatted-zone"

@@ -1,9 +1,9 @@
 import os
 
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError#type:ignore
 from zones.client import S3Client
 from io import BytesIO
-from pydub import AudioSegment
+from pydub import AudioSegment #type:ignore
 
 s3 = S3Client.s3
 

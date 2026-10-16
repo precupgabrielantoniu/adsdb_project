@@ -1,4 +1,4 @@
-import boto3
+import boto3 #type:ignore
 from config import MINIO_ROOT_PASSWORD, MINIO_ROOT_USER, MINIO_ENDPOINT_URL
 
 class S3Client:
