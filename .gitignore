@@ -4,3 +4,6 @@ minio/data/
 # Environment variables
 .env
 .venv
+
+# Raw dataset downloads (re-created by landing_zone.py)
+downloaded_data/
