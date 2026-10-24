@@ -3,15 +3,15 @@
 import os
 from pathlib import Path
 
-import boto3 #type:ignore
 import kagglehub #type:ignore
 import pyarrow.parquet as pq #type:ignore
 from huggingface_hub import snapshot_download #type:ignore
 
-from zones.client import S3Client #type:ignore
+from zones.client import S3Client
 
 #Set up the connection with minio
-s3 = S3Client().s3
+client = S3Client()
+s3 = client.s3
 
 #One bucket with two "folders": the Formatted Zone reads from landing-zone/persistent_landing/<media_type>/
 BUCKET = "landing-zone"

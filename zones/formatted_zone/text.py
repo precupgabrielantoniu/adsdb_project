@@ -17,6 +17,7 @@ client.bucket_exists(SOURCE_BUCKET)
 TARGET_BUCKET = "formatted-zone"
 TARGET_PREFIX = "text/"
 client.bucket_exists(TARGET_BUCKET, True)
+print("Connection to buckets achieved")
 
 def parquet_to_json(parquet_bytes):
     df = pd.read_parquet(BytesIO(parquet_bytes), engine="pyarrow")

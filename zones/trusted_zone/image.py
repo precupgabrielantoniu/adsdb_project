@@ -4,13 +4,9 @@ import os
 import hashlib
 from io import BytesIO
 
-import boto3 #type:ignore
-from botocore.client import Config #type:ignore
-from botocore.exceptions import ClientError #type:ignore
 from PIL import Image, ImageStat
 from tqdm import tqdm #type:ignore
 
-from config import MINIO_ENDPOINT_URL, MINIO_ROOT_PASSWORD, MINIO_ROOT_USER
 from zones.client import S3Client #type:ignore
 
 #Set up the connection with minio
@@ -20,16 +16,12 @@ s3 = client.s3
 #Check existence and set up the source (landing zone) and target (formatted zone) buckets and "folders"
 SOURCE_BUCKET = "formatted-zone"
 SOURCE_PREFIX = "images/"
-try: s3.head_bucket(Bucket=SOURCE_BUCKET)
-except ClientError: raise Exception("Formatted Zone bucket does not exist")
+client.bucket_exists(SOURCE_BUCKET)
 
 TARGET_BUCKET = "trusted-zone"
 TARGET_PREFIX = "images/"
-try: s3.head_bucket(Bucket=TARGET_BUCKET)
-except ClientError:
-    #If the bucket does not exist then this might be the first time the script is being run so create it
-    s3.create_bucket(Bucket = "trusted-zone")
-    print("Created bucket for the Trusted Zone")
+client.bucket_exists(TARGET_BUCKET, True)
+
 #endregion
 
 #region Image quality analysis
