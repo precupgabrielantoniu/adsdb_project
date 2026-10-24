@@ -18,7 +18,8 @@ MINIO_ENDPOINT_URL = os.environ['MINIO_ENDPOINT_URL']
 MINIO_ROOT_USER = os.environ['MINIO_ROOT_USER']
 MINIO_ROOT_PASSWORD = os.environ['MINIO_ROOT_PASSWORD']
 
-s3 = S3Client.s3
+client = S3Client
+s3 = client.s3
 
 #Check existence and set up the source (landing zone) and target (formatted zone) buckets and "folders"
 SOURCE_BUCKET = "landing-zone"

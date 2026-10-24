@@ -4,9 +4,8 @@ import os
 import json
 from collections import defaultdict
 from tqdm import tqdm #type:ignore
+from pylatex import Document, Tabular, Section, Subsection #type:ignore
 
-import boto3 #type:ignore
-from botocore.client import Config #type:ignore
 from botocore.exceptions import ClientError #type:ignore
 
 from dotenv import load_dotenv #type:ignore
@@ -19,7 +18,8 @@ MINIO_ENDPOINT_URL = os.environ['MINIO_ENDPOINT_URL']
 MINIO_ROOT_USER = os.environ['MINIO_ROOT_USER']
 MINIO_ROOT_PASSWORD = os.environ['MINIO_ROOT_PASSWORD']
 
-s3 = S3Client.s3
+client = S3Client()
+s3 = client.s3
 
 #Check existence and set up the source (landing zone) and target (formatted zone) buckets and "folders"
 SOURCE_BUCKET = "formatted-zone"
@@ -94,8 +94,8 @@ with tqdm(total=total_text, desc="Checking text data quality") as progress:
                             "badly_formatted" : badly_formatted,
                         })
             progress.update(1)#Update the progress bar
-
-
+#endregion
+#region Report
 print(f"\nChecked {total_text} texts")
 print(f"  Have empty characteristics: {sum(r['has_empty_chars'] for r in text_records)}")
 print(f"  Badly formatted: {sum(r['badly_formatted'] for r in text_records)}")
@@ -108,6 +108,32 @@ for attribute, counts in sorted(attribute_stats.items(),
     rate = counts["empty"] / total
     print(f"  {attribute}: {counts['empty']}/{total} empty ({rate:.0%})")
 
+#Create a pdf text through latex
+geometry_options = {"tmargin": "1cm", "lmargin": "10cm"}
+doc = Document(geometry_options=geometry_options)
+
+with doc.create(Section("Text quality report")):
+    doc.append(f"This document shows results for a total of {total_text} instances for the animal identification project pipeline.")
+    with doc.create(Subsection("Attribute emptiness")):
+        doc.append(f"A total of {sum(r['has_empty_chars'] for r in text_records)} observations were found to have empty characteristics")
+        doc.append(f"Emptiness characteristics per attribute are as follows:")
+        with doc.create(Tabular) as table:
+            table.add_hline()
+            table.add_row("Attribute", "Empty instances", "Total instances", "Rate of emptiness")
+            for attribute, counts in sorted(attribute_stats.items(), key=lambda item: item[1]["empty"] / (item[1]["empty"] + item[1]["present"]), reverse=True,):
+                total = counts["empty"] + counts["present"]
+                rate = counts["empty"] / total
+                table.add_hline()
+                table.add_row((attribute, counts['empty'], total, f"{rate:.0%}" ))
+            table.add_caption("Emptiness by attribute")
+            #Potentially add a graph here with distribution of attributes ??
+
+    with doc.create(Subsection("Formatting issues")):
+        doc.add(f"A total of {sum(r['badly_formatted'] for r in text_records)} observations had baldy formatted attributes (not starting with uppercase or number)")
+
+#endregion
+
+#region Moving to trusted zone
 with tqdm(total=total_text, desc=f"Moving {total_text} to {TARGET_BUCKET}") as progress:
     for record in text_records: #For every text
         #save the text to the target bucket

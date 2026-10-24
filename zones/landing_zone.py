@@ -8,13 +8,10 @@ import kagglehub #type:ignore
 import pyarrow.parquet as pq #type:ignore
 from huggingface_hub import snapshot_download #type:ignore
 
-from config import MINIO_ENDPOINT_URL, MINIO_ROOT_PASSWORD, MINIO_ROOT_USER #type:ignore
+from zones.client import S3Client #type:ignore
 
 #Set up the connection with minio
-s3 = boto3.client('s3',
-                  endpoint_url=MINIO_ENDPOINT_URL,
-                  aws_access_key_id=MINIO_ROOT_USER,
-                  aws_secret_access_key=MINIO_ROOT_PASSWORD)
+s3 = S3Client().s3
 
 #One bucket with two "folders": the Formatted Zone reads from landing-zone/persistent_landing/<media_type>/
 BUCKET = "landing-zone"

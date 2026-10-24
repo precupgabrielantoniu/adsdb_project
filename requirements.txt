@@ -10,3 +10,4 @@ pyarrow==26.0.0
 pydub==0.25.1
 botocore
 pandas
+pylatex
