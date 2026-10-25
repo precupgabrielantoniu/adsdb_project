@@ -22,8 +22,6 @@ TARGET_BUCKET = "trusted-zone"
 TARGET_PREFIX = "text/"
 client.bucket_exists(TARGET_BUCKET, True)
 
-#endregion
-
 #Count total text files for the progress bar
 count_paginator = s3.get_paginator('list_objects_v2')
 total_text = sum(
@@ -32,7 +30,7 @@ total_text = sum(
 )
 
 def is_well_formatted(value):
-    """A value counts as well-formatted if it starts capitalized or with a digit.
+    """Returns if text is well-formatted, meaning it starts capitalized or with a digit.
     Checked in general across ALL values of a record, not per specific attribute,
     since which attributes exist varies from dataset to dataset."""
     text = str(value)
@@ -45,6 +43,7 @@ text_records = []
 
 #Tracks attribute emptiness across all datasets
 attribute_stats = defaultdict(lambda: {"empty": 0, "present": 0})
+#endregion
 
 #region Text quality analysis
 paginator = s3.get_paginator('list_objects_v2')

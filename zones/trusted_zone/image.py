@@ -211,7 +211,7 @@ with doc.create(Section("Image quality report")):
         doc.append("This can also flag genuine photos with a uniform region such as a clear sky or a dark background, so the samples below should be checked. ")
         doc.append(f"A total of {len(r for r in image_records if r["is_part_flat"])} images were found to be partly flat.")
         add_samples(doc, [r["key"] for r in sorted((r for r in image_records if r["is_part_flat"]), key=lambda r: r["min_quadrant_stddev"])], "part_flat_samples", "Sample partly flat images (flattest quadrant first).")
-        add_key_table(doc, ["Image", "Lowest quadrant std. deviation"], [[os.path.basename(r["key"]), f"{r['min_quadrant_stddev']:.2f}"] for r in part_flat])
+        add_key_table(doc, ["Image", "Lowest quadrant std. deviation"], [[os.path.basename(r["key"]), f"{r['min_quadrant_stddev']:.2f}"] for r in len(r for r in image_records if r["is_part_flat"])])
 
 path = "zones/trusted_zone/quality_reports/"
 if not os.path.exists(path): os.mkdir(path)#Create directory to save the pdf in if nonexistent
