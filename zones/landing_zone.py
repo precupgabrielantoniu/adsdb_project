@@ -94,11 +94,12 @@ for path in Path("downloaded_data").rglob("*"):
     if key.startswith(f"{TEMPORAL}images/") and path.suffix == ".parquet":
         #The images are published inside parquet files: land each one as its own file, bytes untouched
         split = path.name.split("-")[0] #train or test
-        cols = ["image", "file_name"] if "nirmalendu01" in key else ["image"]
+        cols = ["image", "file_name"] if "file_name" in pq.read_schema(path).names else ["image"]
         table = pq.read_table(path, columns=cols)
-        for i, image in enumerate(table.column("image").to_pylist()):
-            #image['path'] may be None; use file_name column if available
-            filename = table.column("file_name")[i].as_py() if "file_name" in table.column_names else image['path']
+        names = table.column("file_name").to_pylist() if "file_name" in table.column_names else [None] * table.num_rows
+        for i, (image, file_name) in enumerate(zip(table.column("image").to_pylist(), names)):
+            #Prefer file_name, then image['path'], else a name derived from the shard so keys never collide
+            filename = file_name or image["path"] or f"{path.stem}_{i:05d}.jpg"
             s3.put_object(Bucket=BUCKET, Key=f"{key.rsplit('/', 2)[0]}/{split}/{filename}", Body=image["bytes"])
     else:
         s3.upload_file(str(path), BUCKET, key)
