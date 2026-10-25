@@ -1,10 +1,11 @@
 #region Setup
 #Necessary imports
+import datetime
 import os
 import json
 from collections import defaultdict
 from tqdm import tqdm #type:ignore
-from pylatex import Document, Tabular, Section, Subsection #type:ignore
+from pylatex import Document, LongTable, Section, Subsection #type:ignore
 
 from zones.client import S3Client #type:ignore
 
@@ -96,28 +97,33 @@ for attribute, counts in sorted(attribute_stats.items(),
     print(f"  {attribute}: {counts['empty']}/{total} empty ({rate:.0%})")
 
 #Create a pdf text through latex
-geometry_options = {"tmargin": "1cm", "lmargin": "10cm"}
+geometry_options = {"margin": "2.5cm"}
 doc = Document(geometry_options=geometry_options)
 
 with doc.create(Section("Text quality report")):
     doc.append(f"This document shows results for a total of {total_text} instances for the animal identification project pipeline.")
     with doc.create(Subsection("Attribute emptiness")):
-        doc.append(f"A total of {sum(r['has_empty_chars'] for r in text_records)} observations were found to have empty characteristics")
+        doc.append(f"A total of {sum(r['has_empty_chars'] for r in text_records)} observations were found to have empty characteristics. ")
         doc.append(f"Emptiness characteristics per attribute are as follows:")
-        with doc.create(Tabular) as table:
+        with doc.create(LongTable("l|r|r|r")) as table: #LongTable breaks across pages, Tabular doesn't
             table.add_hline()
             table.add_row("Attribute", "Empty instances", "Total instances", "Rate of emptiness")
+            table.add_hline()
+            table.end_table_header() #repeat the header on every page
             for attribute, counts in sorted(attribute_stats.items(), key=lambda item: item[1]["empty"] / (item[1]["empty"] + item[1]["present"]), reverse=True,):
                 total = counts["empty"] + counts["present"]
                 rate = counts["empty"] / total
-                table.add_hline()
                 table.add_row((attribute, counts['empty'], total, f"{rate:.0%}" ))
-            table.add_caption("Emptiness by attribute")
+            table.add_hline()
             #Potentially add a graph here with distribution of attributes ??
 
     with doc.create(Subsection("Formatting issues")):
-        doc.add(f"A total of {sum(r['badly_formatted'] for r in text_records)} observations had baldy formatted attributes (not starting with uppercase or number)")
+        doc.append(f"A total of {sum(r['badly_formatted'] for r in text_records)} observations had badly formatted attributes (not starting with uppercase or number)")
 
+#Generate outside the Section block, otherwise the section header is left out of the pdf
+path = "zones/trusted_zone/quality_reports/"
+if not os.path.exists(path): os.mkdir(path)#Create directory to save the pdf in if nonexistent
+doc.generate_pdf(filepath = os.path.join(path,f"text_quality_report_{datetime.date.today()}"), clean_tex=True) #save as pdf
 #endregion
 
 #region Moving to trusted zone
