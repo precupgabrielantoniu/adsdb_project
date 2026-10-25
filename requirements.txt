@@ -11,3 +11,5 @@ pydub==0.25.1
 botocore
 pandas
 pylatex
+altair #I could create charts with matplot but i really like altair more but if it causes problems we can take it out
+vl-convert-python
