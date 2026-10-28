@@ -190,7 +190,7 @@ with doc.create(Section("Image quality report")):
     with doc.create(Subsection("Size outliers")):
         doc.append("To find outliers size is measured as the area (width x height) of each unique image. Using the interquartile range (IQR = Q3 - Q1), ")
         doc.append(f"an image is an outlier when its area is below Q1 - 1.5 IQR ({lower_bound:,.0f} px) or above Q3 + 1.5 IQR ({upper_bound:,.0f} px). ")
-        doc.append(f"A total of {len((r for r in image_records if r["is_size_outlier"]))} images were found to be size outliers.")
+        doc.append(f"A total of {len([r for r in image_records if r["is_size_outlier"]])} images were found to be size outliers.")
         if os.path.exists(size_chart_path):
             with doc.create(Figure(position="h!")) as figure:
                 figure.add_image(size_chart_path, width=NoEscape(r"0.8\textwidth"))
@@ -201,7 +201,7 @@ with doc.create(Section("Image quality report")):
     with doc.create(Subsection("Flat/blank images")):
         doc.append("To find flat images each image is converted to grayscale and the standard deviation of its pixel values is measured. ")
         doc.append(f"A low standard deviation means the pixels barely change, so an image with a standard deviation below {FLAT_STDDEV_THRESHOLD} (on a 0-255 scale) is considered flat: blank or a single solid colour. ")
-        doc.append(f"A total of {len((r for r in image_records if r["is_flat"]))} images were found to be flat.")
+        doc.append(f"A total of {len([r for r in image_records if r["is_flat"]])} images were found to be flat.")
         add_samples(doc, [r["key"] for r in sorted((r for r in image_records if r["is_flat"]), key=lambda r: r["stddev"])], "flat_samples", "Sample flat images (lowest standard deviation first).")
         add_key_table(doc, ["Image", "Std. deviation"], [[os.path.basename(r["key"]), f"{r['stddev']:.2f}"] for r in sorted((r for r in image_records if r["is_flat"]), key=lambda r: r["stddev"])])
 
@@ -209,13 +209,14 @@ with doc.create(Section("Image quality report")):
         doc.append("Some images are only partly blank, e.g. a cropped or padded image with a solid border. To catch these, the grayscale image is split into four quadrants and the same standard deviation is measured in each one. ")
         doc.append(f"An image that is not flat overall but has at least one quadrant below {FLAT_STDDEV_THRESHOLD} is considered partly flat. ")
         doc.append("This can also flag genuine photos with a uniform region such as a clear sky or a dark background, so the samples below should be checked. ")
-        doc.append(f"A total of {len(r for r in image_records if r["is_part_flat"])} images were found to be partly flat.")
+        doc.append(f"A total of {len([r for r in image_records if r["is_part_flat"]])} images were found to be partly flat.")
         add_samples(doc, [r["key"] for r in sorted((r for r in image_records if r["is_part_flat"]), key=lambda r: r["min_quadrant_stddev"])], "part_flat_samples", "Sample partly flat images (flattest quadrant first).")
-        add_key_table(doc, ["Image", "Lowest quadrant std. deviation"], [[os.path.basename(r["key"]), f"{r['min_quadrant_stddev']:.2f}"] for r in len(r for r in image_records if r["is_part_flat"])])
+        add_key_table(doc, ["Image", "Lowest quadrant std. deviation"], [[os.path.basename(r["key"]), f"{r['min_quadrant_stddev']:.2f}"] for r in [r for r in image_records if r["is_part_flat"]]])
 
 path = "zones/trusted_zone/quality_reports/"
 if not os.path.exists(path): os.mkdir(path)#Create directory to save the pdf in if nonexistent
 doc.generate_pdf(filepath = os.path.join(path,f"image_quality_report_{datetime.date.today()}"), clean_tex=True) #save as pdf
+print(f"Created image quality report at {path}/image_quality_report_{datetime.date.today()}")
 #endregion
 
 #endregion

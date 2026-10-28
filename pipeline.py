@@ -3,10 +3,10 @@ import subprocess
 import sys
 
 STAGES = [
-    "zones.landing_zone",
-    "zones.formatted_zone.image",
-    "zones.formatted_zone.text",
-    "zones.formatted_zone.audio",
+    #"zones.landing_zone",
+    #"zones.formatted_zone.image",
+    #"zones.formatted_zone.text",
+    #"zones.formatted_zone.audio",
     "zones.trusted_zone.image",
     "zones.trusted_zone.text",
     "zones.exploitation_zone.text",
