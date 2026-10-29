@@ -132,8 +132,7 @@ with tqdm(total=total_text, desc=f"Moving {total_text} to {TARGET_BUCKET}") as p
         s3.copy_object(
             Bucket=TARGET_BUCKET,
             CopySource={"Bucket": SOURCE_BUCKET, "Key": record["key"]},
-            Key=target_key,
-        )
+            Key=target_key)
         progress.update(1)#Update the progress bar    
 
 #endregion
