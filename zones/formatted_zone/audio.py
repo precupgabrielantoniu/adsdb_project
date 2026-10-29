@@ -1,5 +1,7 @@
 import os
 
+from tqdm import tqdm
+
 from zones.client import S3Client
 from io import BytesIO
 from pydub import AudioSegment
@@ -18,6 +20,12 @@ TARGET_PREFIX = "audio/"
 client.bucket_exists(TARGET_BUCKET, True)
 print("Connection to buckets achieved")
 
+# progress bar
+count_paginator = s3.get_paginator('list_objects_v2')
+total_audio = sum(
+    len(page.get('Contents', []))
+    for page in count_paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX)
+)
 
 def to_wav(audio_bytes_wav):
     # converts audio bytes into .wav format
@@ -61,40 +69,41 @@ for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
                 "label": row["label"]
             }
 
-
 # second loop to go through audio files
-for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
-    for audio in page.get('Contents', []):
-        key = audio['Key']
+with tqdm(total=total_audio, desc="Checking audio data quality") as progress:
+    for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
+        for audio in page.get('Contents', []):
+            key = audio['Key']
 
-        if key.lower().endswith('.csv'):
-            continue
+            if key.lower().endswith('.csv'):
+                continue
 
-        source_object = s3.get_object(Bucket=SOURCE_BUCKET, Key=key)
-        audio_bytes = source_object['Body'].read()
+            source_object = s3.get_object(Bucket=SOURCE_BUCKET, Key=key)
+            audio_bytes = source_object['Body'].read()
 
-        # don't transform if already .wav
-        if not key.lower().endswith('.wav'):
-            # transform to .wav
-            audio_bytes = to_wav(audio_bytes)
+            # don't transform if already .wav
+            if not key.lower().endswith('.wav'):
+                # transform to .wav
+                audio_bytes = to_wav(audio_bytes)
 
-        # save the audio + metadata to the formatted zone
-        file_stem = os.path.splitext(os.path.basename(key))[0]
-        target_key = f"{TARGET_PREFIX}{file_stem}.wav"
+            # save the audio + metadata to the formatted zone
+            file_stem = os.path.splitext(os.path.basename(key))[0]
+            target_key = f"{TARGET_PREFIX}{file_stem}.wav"
 
-        filename = os.path.basename(key)
-        try:
-            metadata = metadata_by_filename[filename]
-        except KeyError: # just in case there is no metadata available
-            metadata = {}
+            filename = os.path.basename(key)
+            try:
+                metadata = metadata_by_filename[filename]
+            except KeyError: # just in case there is no metadata available
+                metadata = {}
 
-        s3.put_object(
-            Bucket=TARGET_BUCKET,
-            Key=target_key,
-            Body=audio_bytes,
-            ContentType="audio/wav",
-            Metadata=metadata
-        )
+            s3.put_object(
+                Bucket=TARGET_BUCKET,
+                Key=target_key,
+                Body=audio_bytes,
+                ContentType="audio/wav",
+                Metadata=metadata
+            )
+            progress.update(1)
 
 print("Successfully formatted audio data")
 
