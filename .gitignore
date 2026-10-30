@@ -1,6 +1,9 @@
 # MinIO data and internal metadata
 minio/data/
 
+#Chromadb persistent data
+chroma_db/
+
 # Environment variables
 .env
 .venv
