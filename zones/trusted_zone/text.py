@@ -119,9 +119,9 @@ with doc.create(Section("Text quality report")):
     with doc.create(Subsection("Formatting issues")):
         doc.append(f"A total of {sum(r['badly_formatted'] for r in text_records)} observations had badly formatted attributes (not starting with uppercase or number)")
 
-path = "zones/trusted_zone/quality_reports/"
-if not os.path.exists(path): os.mkdir(path)#Create directory to save the pdf in if nonexistent
-doc.generate_pdf(filepath = os.path.join(path,f"text_quality_report_{datetime.date.today()}"), clean_tex=True) #save as pdf
+path = os.path.join(os.path.dirname(__file__), "quality_reports")
+os.makedirs(path, exist_ok=True) #Create directory to save the pdf in if nonexistent
+doc.generate_pdf(filepath = os.path.join(path,f"text_quality_report_{datetime.date.today()}"), compiler="pdflatex", clean_tex=True) #save as pdf
 #endregion
 
 #region Moving to trusted zone
