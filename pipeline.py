@@ -10,6 +10,7 @@ STAGES = [
     "zones.trusted_zone.image",
     "zones.trusted_zone.text",
     "zones.exploitation_zone.text",
+    "zones.exploitation_zone.image"
 ]
 
 for stage in STAGES:

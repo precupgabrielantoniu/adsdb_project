@@ -4,9 +4,15 @@ minio/data/
 #Chromadb persistent data
 chroma_db/
 
+#Pdf files (quality reports)
+.pdf
+
 # Environment variables
 .env
 .venv
+
+#cache
+.pyc
 
 # Raw dataset downloads (re-created by landing_zone.py)
 downloaded_data/
