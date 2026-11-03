@@ -10,3 +10,5 @@ chroma_db/
 
 # Raw dataset downloads (re-created by landing_zone.py)
 downloaded_data/
+__pycache__/
+*.py[cod]
