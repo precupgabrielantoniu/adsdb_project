@@ -6,6 +6,8 @@ import numpy as np
 import chromadb#type:ignore
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction#type:ignore
 
+import streamlit as st #type:ignore
+
 from config import CHROMA_PATH
 
 #Find the three collections from the persistent chromadb client
@@ -33,4 +35,5 @@ else:
     results_audio = audio_embeddings.query(query_texts=[content], n_results=3)
 
 #Return then In a file? using a small streamlit app?
+st.image{}
 
