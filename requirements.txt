@@ -9,11 +9,13 @@ huggingface_hub==2.2.0
 pyarrow==26.0.0
 pydub==0.25.1
 botocore
-pandas
+pandas<3
+numpy<2
 pylatex
 altair #I could create charts with matplot but i really like altair more but if it causes problems we can take it out
 vl-convert-python
 chromadb
 open-clip-torch
+streamlit==1.66.1
 panns_inference==0.1.1
 scipy
