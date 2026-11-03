@@ -286,8 +286,12 @@ with tempfile.TemporaryDirectory() as assets_dir:
     os.makedirs(report_dir, exist_ok=True) # create report folder if needed
     report_path = os.path.join(report_dir, f"audio_quality_report_{datetime.date.today()}")
     # compile twice to align table columns across pages
-    doc.generate_pdf(filepath=report_path, compiler="pdflatex", clean=False, clean_tex=False)
-    doc.generate_pdf(filepath=report_path, compiler="pdflatex", clean_tex=True)
+    try:
+        doc.generate_pdf(filepath=report_path, compiler="pdflatex", clean=False, clean_tex=False)
+        doc.generate_pdf(filepath=report_path, compiler="pdflatex", clean_tex=True)
+        print(f"Created audio quality report at {report_path}")
+    except Exception as e:
+        print(f"Warning: PDF generation failed ({e}). Continuing without PDF report.")
 
 # copy readable audio without duplicates to the trusted zone
 for record in tqdm(trusted_records, desc=f"Moving audio to {TARGET_BUCKET}"):

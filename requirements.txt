@@ -1,5 +1,5 @@
 boto3==1.43.110
-python-dotenv==0.21.0  
+python-dotenv==0.21.0
 datasets==5.1.0
 torch
 torchcodec
@@ -15,3 +15,5 @@ altair #I could create charts with matplot but i really like altair more but if 
 vl-convert-python
 chromadb
 open-clip-torch
+panns_inference==0.1.1
+scipy

@@ -9,7 +9,10 @@ STAGES = [
     "zones.formatted_zone.audio",
     "zones.trusted_zone.image",
     "zones.trusted_zone.text",
+    "zones.trusted_zone.audio",
+    "zones.exploitation_zone.image",
     "zones.exploitation_zone.text",
+    "zones.exploitation_zone.audio",
 ]
 
 for stage in STAGES:

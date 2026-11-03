@@ -121,7 +121,11 @@ with doc.create(Section("Text quality report")):
 
 path = os.path.join(os.path.dirname(__file__), "quality_reports")
 os.makedirs(path, exist_ok=True) #Create directory to save the pdf in if nonexistent
-doc.generate_pdf(filepath = os.path.join(path,f"text_quality_report_{datetime.date.today()}"), compiler="pdflatex", clean_tex=True) #save as pdf
+try:
+    doc.generate_pdf(filepath = os.path.join(path,f"text_quality_report_{datetime.date.today()}"), compiler="pdflatex", clean_tex=True) #save as pdf
+    print(f"Created text quality report at {path}/text_quality_report_{datetime.date.today()}")
+except Exception as e:
+    print(f"Warning: PDF generation failed ({e}). Continuing without PDF report.")
 #endregion
 
 #region Moving to trusted zone
