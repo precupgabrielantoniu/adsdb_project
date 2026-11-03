@@ -16,3 +16,4 @@ vl-convert-python
 chromadb
 open-clip-torch
 streamlit==1.66.1
+transformers==5.22.1
