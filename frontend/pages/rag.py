@@ -1,11 +1,16 @@
 import streamlit as st
-with st.spinner("Loading model… Please wait"):
-    from tasks.T3_RAG import invoke_rag
+from tasks.T3_RAG import RagService
+
+@st.cache_resource(show_spinner="Loading model… Please wait")
+def get_rag_service():
+    return RagService()
+
+service = get_rag_service()
 
 st.caption("Task 3: Retrieval-augmented generation (RAG)")
 
 st.header("Ask :green[Animal Wiki]")
-st.write("Provie an image of an animal and ask a question about it!")
+st.write("Provide an image of an animal and ask a question about it!")
 
 uploaded_file = st.file_uploader("Choose an image", type="image")
 
@@ -21,7 +26,7 @@ if st.button("Generate answer",
 ):
 
     with st.spinner("Generating answer..."):
-        answer, retrieved_images = invoke_rag(
+        answer, retrieved_images = service.invoke(
             uploaded_file, user_question
         )
 
