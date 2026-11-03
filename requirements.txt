@@ -19,3 +19,4 @@ open-clip-torch
 streamlit==1.66.1
 panns_inference==0.1.1
 scipy
+librosa
