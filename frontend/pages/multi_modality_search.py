@@ -29,10 +29,6 @@ topK = st.slider("Show top K results", 1, 50)
 
 if selection == "Image": #If an image is choosen as input
     #Read it
-    results_image, results_text = None, None
-
-if selection == "Image": #If an image is choosen as input
-    #Read it
     uploaded_image = st.file_uploader("Upload your search image here", type=["jpg", "png"])
     if uploaded_image is not None:
         results_image, results_text = service.image_query(uploaded_image, topK)
