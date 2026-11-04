@@ -25,7 +25,7 @@ st.divider()
 st.text("Choose you data type here")
 selection = st.segmented_control("Directions", ["Image", "Text"])
 st.text("Choose the amount search of results to show per type of data")
-topK = st.slider("Show top K results", 0, 50)
+topK = st.slider("Show top K results", 1, 50)
 
 if selection == "Image": #If an image is choosen as input
     #Read it
@@ -34,14 +34,16 @@ if selection == "Image": #If an image is choosen as input
 
 elif selection == "Text":
     search_text = st.text_input("Input your search text here", "Lorem ipsum")
-    results_image, results_text = service.text_query(search_text, topK)
+    if search_text != "Lorem ipsum": results_image, results_text = service.text_query(search_text, topK)
 
 #Show the results regardles of input type with the images going first and the text afterwards
 st.header(f"Closest {topK} images to yours")
-for image in results_image: #per result
-    st.image(image)
+if 'uploaded_image' in locals():
+    for image in results_image: #per result
+        st.image(image)
 
 st.header(f"Closest {topK} texts to yours")
-for text in results_text:
-    st.divider()
-    st.text(text)
+if 'search_text' in locals() and search_text != "Lorem ipsum":
+    for text in results_text:
+        st.divider()
+        st.text(text)

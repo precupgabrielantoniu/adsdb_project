@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st #type:ignore
 import json
 import os
 from io import BytesIO
@@ -8,9 +8,6 @@ from PIL import Image
 st.set_page_config(page_title="Same-Modality Search", layout="wide")
 
 # Import search functions
-import sys
-sys.path.insert(0, '/home/precupgabriel/3A/adsdb_project')
-
 from zones.client import S3Client
 from zones.exploitation_zone.audio import find_similar_audio
 from zones.exploitation_zone.image import find_similar_images

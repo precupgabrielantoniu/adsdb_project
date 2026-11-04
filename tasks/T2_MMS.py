@@ -5,7 +5,6 @@ import numpy as np
 from PIL import Image
 from chromadb.utils.embedding_functions import OpenCLIPEmbeddingFunction#type:ignore
 import torch#type:ignore
-from transformers import AutoProcessor, LlavaOnevisionForConditionalGeneration#type:ignore
 
 from config import CHROMA_PATH
 from zones.client import S3Client
