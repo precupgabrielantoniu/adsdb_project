@@ -17,4 +17,8 @@ vl-convert-python==1.9.0.post1
 chromadb==1.5.9
 open_clip_torch==3.3.0
 streamlit==1.66.1
+panns_inference==0.1.1
+scipy
+librosa
+transformers==5.22.1
 audioop-lts

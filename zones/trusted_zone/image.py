@@ -215,8 +215,11 @@ with doc.create(Section("Image quality report")):
 
 path = "zones/trusted_zone/quality_reports/"
 if not os.path.exists(path): os.mkdir(path)#Create directory to save the pdf in if nonexistent
-doc.generate_pdf(filepath = os.path.join(path,f"image_quality_report_{datetime.date.today()}"), clean_tex=True) #save as pdf
-print(f"Created image quality report at {path}/image_quality_report_{datetime.date.today()}")
+try:
+    doc.generate_pdf(filepath = os.path.join(path,f"image_quality_report_{datetime.date.today()}"), clean_tex=True) #save as pdf
+    print(f"Created image quality report at {path}/image_quality_report_{datetime.date.today()}")
+except Exception as e:
+    print(f"Warning: PDF generation failed ({e}). Continuing without PDF report.")
 #endregion
 
 #endregion

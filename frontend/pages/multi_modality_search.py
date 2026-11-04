@@ -13,13 +13,12 @@ from config import CHROMA_PATH
 from zones.client import S3Client
 from zones.formatted_zone.image import to_jpg
 
-#Find the three collections from the persistent chromadb client
+#Find the two collections from the persistent chromadb client
 chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
 client = S3Client()
 s3 = client.s3
 
 text_embeddings = chroma_client.get_collection("text_embeddings_collection")
-audio_embeddings = chroma_client.get_collection("audio_embeddings_collection")
 image_embeddings = chroma_client.get_collection("image_embeddings_collection")
 
 #Setting up a streamlit page to obtain the input
@@ -39,7 +38,7 @@ if selection == "Image": #If an image is choosen as input
     #Get results both from text and image collections
     results_text = text_embeddings.query(query_images=[jpg_image], n_results=topK)
     results_image = image_embeddings.query(query_images=[jpg_image], n_results=topK)
-    
+
 elif selection == "Text":
     search_text = st.text_input("Input your search text here", "Lorem ipsum")
     results_text = text_embeddings.query(query_texts=[search_text], n_results=topK)
