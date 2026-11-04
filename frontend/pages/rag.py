@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st #type:ignore
 from tasks.T3_RAG import RagService
 
 @st.cache_resource(show_spinner="Loading model… Please wait")
