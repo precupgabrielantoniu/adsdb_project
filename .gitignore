@@ -11,8 +11,7 @@ chroma_db/
 .env
 .venv
 
-#cache
-.pyc
+*.pyc
 
 # Raw dataset downloads (re-created by landing_zone.py)
 downloaded_data/

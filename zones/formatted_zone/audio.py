@@ -70,7 +70,7 @@ for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
             }
 
 # second loop to go through audio files
-with tqdm(total=total_audio, desc="Checking audio data quality") as progress:
+with tqdm(total=total_audio, desc="Formatting audio data") as progress:
     for page in paginator.paginate(Bucket=SOURCE_BUCKET, Prefix=SOURCE_PREFIX):
         for audio in page.get('Contents', []):
             key = audio['Key']
