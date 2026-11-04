@@ -36,7 +36,7 @@ class MultiModalSearchService:
             text_results = self.text_collection.query(
                 query_texts=[user_text],
                 n_results=topk,
-                include=["documents", "distances"],
+                include=["documents", "metadatas", "distances"],
             )
     
             # search for similar image embeddings
@@ -61,7 +61,7 @@ class MultiModalSearchService:
         text_results = self.text_collection.query(
             query_images=[image],
             n_results=topk,
-            include=["documents", "distances"],
+            include=["documents", "metadatas", "distances"],
         )
 
         # search for similar image embeddings
@@ -96,7 +96,7 @@ class MultiModalSearchService:
     
             # retrieve the actual images from minio
         retrieved_images = []
-    
+
         for metadata in image_results["metadatas"][0]:
             response = self.s3.get_object(
                    Bucket=metadata["source_bucket"],
@@ -113,16 +113,8 @@ class MultiModalSearchService:
             #Retrieve text from minio
         retrieved_texts = []
     
-        for metadata in text_results["metadatas"][0]:
-            response = self.s3.get_object(
-                    Bucket=metadata["source_bucket"],
-                    Key=metadata["source_key"])
-            
-            body = response["Body"]
-            
-            try:text = body.read()
-            finally:body.close()
+        for docu in text_results["documents"][0]:
         
-            retrieved_texts.append(text)
+            retrieved_texts.append(docu)
         return retrieved_images,retrieved_texts
     
