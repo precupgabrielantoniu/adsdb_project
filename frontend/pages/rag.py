@@ -15,7 +15,7 @@ st.write("Provide an image of an animal and ask a question about it!")
 uploaded_file = st.file_uploader("Choose an image", type="image")
 
 if uploaded_file is not None:
-    st.image(uploaded_file)
+    st.image(uploaded_file, width=300)
 
 
 user_question = st.text_input("Enter your question about the animal")
@@ -32,5 +32,6 @@ if st.button("Generate answer",
 
     st.write(answer)
 
-    for i, image in enumerate(retrieved_images, start=1):
-        st.image(image, caption=f"Image {i}")
+    with st.container(horizontal=True, gap=50, wrap=True):
+        for i, image in enumerate(retrieved_images, start=1):
+            st.image(image, caption=f"Image {i}", width=300)

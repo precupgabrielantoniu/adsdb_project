@@ -112,6 +112,7 @@ class RagService:
         Answer the user's question about the first image.
         The other images are references from our database and may show different animals.
         The retrieved text is from our database and may describe other animals.
+        Use the retrieved images and text to answer the user's question.
     
         Question:
         {user_question}
