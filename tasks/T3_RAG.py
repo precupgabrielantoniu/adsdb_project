@@ -146,7 +146,7 @@ class RagService:
         with torch.inference_mode():
             output = self.model.generate(
                 **inputs,
-                max_new_tokens=1400,
+                max_new_tokens=500,
                 do_sample=False,
             )
 
