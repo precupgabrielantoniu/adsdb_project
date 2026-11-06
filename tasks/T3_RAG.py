@@ -62,7 +62,7 @@ class RagService:
             n_results=2,
             include=["metadatas", "distances"],
         )
-        # TODO: delete
+        # for debugging purposes
         print("\nRetrieved text:")
         for source_id, document, distance in zip(
             text_results["ids"][0],
@@ -146,7 +146,7 @@ class RagService:
         with torch.inference_mode():
             output = self.model.generate(
                 **inputs,
-                max_new_tokens=400,
+                max_new_tokens=500,
                 do_sample=False,
             )
 
