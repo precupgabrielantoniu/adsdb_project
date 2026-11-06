@@ -55,7 +55,7 @@ if modality == "🎵 Audio":
                         st.metric("Similarity", f"{score:.2%}")
                     with col3:
                         try:
-                            audio_bytes = s3.get_object(Bucket="exploitation-zone", Key=key)["Body"].read()
+                            audio_bytes = s3.get_object(Bucket="trusted-zone", Key=key)["Body"].read()
                             st.audio(audio_bytes)
                         except Exception as e:
                             st.error(f"Could not load audio: {e}")
@@ -83,7 +83,7 @@ elif modality == "🖼️ Image":
                 for idx, (key, score) in enumerate(similar):
                     with cols[idx % 3]:
                         try:
-                            img_bytes = s3.get_object(Bucket="exploitation-zone", Key=key)["Body"].read()
+                            img_bytes = s3.get_object(Bucket="trusted-zone", Key=key)["Body"].read()
                             img = Image.open(BytesIO(img_bytes))
                             st.image(img, caption=f"Match: {score:.0%}")
                         except Exception as e:

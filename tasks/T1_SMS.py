@@ -18,14 +18,12 @@ class SameModalitySearchService:
     def __init__(self):
         self.s3 = S3Client().s3
 
-        # Load audio embeddings from S3
-        self.audio_embeddings = []
-        self.audio_embedding_index = {}
-        self._load_audio_embeddings()
-
         # Load ChromaDB collections
         embedding_function = OpenCLIPEmbeddingFunction()
         chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
+        self.audio_collection = chroma_client.get_collection(
+            name="audio_embeddings_collection"
+        )
         self.image_collection = chroma_client.get_collection(
             name="image_embeddings_collection",
             embedding_function=embedding_function
@@ -35,25 +33,8 @@ class SameModalitySearchService:
             embedding_function=embedding_function
         )
 
-    def _load_audio_embeddings(self):
-        """Load audio embeddings index from S3."""
-        try:
-            response = self.s3.get_object(
-                Bucket="exploitation-zone",
-                Key="audio/_embedding_index.json"
-            )
-            index_data = json.loads(response['Body'].read().decode('utf-8'))
-            self.audio_embeddings = index_data.get('embeddings', [])
-            self.audio_embedding_index = index_data.get('index', {})
-        except Exception:
-            self.audio_embeddings = []
-            self.audio_embedding_index = {}
-
-    def find_similar_audio(self, user_audio_bytes, top_k=5, similarity_threshold=0.3):
+    def find_similar_audio(self, user_audio_bytes, top_k=5):
         """Find similar audio files from uploaded audio bytes."""
-        if not self.audio_embeddings:
-            return []
-
         try:
             # Compute MFCC embedding from user audio
             audio_data, sr = librosa.load(
@@ -74,15 +55,29 @@ class SameModalitySearchService:
             print(f"Error computing audio embedding: {e}")
             return []
 
-        # Search for similar audio
-        similarities = []
-        for record in self.audio_embeddings:
-            sim = self._cosine_similarity(query_embedding, record["embedding"])
-            if sim >= similarity_threshold:
-                similarities.append((record["key"], sim))
+        # Query ChromaDB for similar audio
+        try:
+            results = self.audio_collection.query(
+                query_embeddings=[query_embedding],
+                n_results=top_k,
+                include=["metadatas", "distances"]
+            )
 
-        similarities.sort(key=lambda x: x[1], reverse=True)
-        return similarities[:top_k]
+            # Format results
+            similar_audio = []
+            if results and results['ids'] and len(results['ids']) > 0:
+                for distance, metadata in zip(
+                    results['distances'][0],
+                    results['metadatas'][0]
+                ):
+                    similarity_score = 1 - distance
+                    source_key = metadata.get('source_key', '')
+                    similar_audio.append((source_key, similarity_score))
+
+            return similar_audio
+        except Exception as e:
+            print(f"Error querying audio embeddings: {e}")
+            return []
 
     def find_similar_images(self, user_image_bytes, top_k=5):
         """Find similar images from uploaded image bytes."""
@@ -104,13 +99,13 @@ class SameModalitySearchService:
                 for doc_id, distance in zip(results['ids'][0], results['distances'][0]):
                     # doc_id is like "trusted-zone/images/filename.jpg", convert to exploitation-zone path
                     filename = doc_id.split('/')[-1]
-                    exploitation_key = f"images/{filename}"
+                    source_key = f"images/{filename}"
 
                     # Verify image exists
                     try:
-                        self.s3.head_object(Bucket="exploitation-zone", Key=exploitation_key)
+                        self.s3.head_object(Bucket="trusted-zone", Key=source_key)
                         similarity_score = 1 - distance
-                        similar_images.append((exploitation_key, similarity_score))
+                        similar_images.append((source_key, similarity_score))
                     except:
                         pass
 
@@ -144,15 +139,3 @@ class SameModalitySearchService:
             print(f"Error querying similar texts: {e}")
             return []
 
-    def _cosine_similarity(self, embedding1, embedding2):
-        """Calculate cosine similarity between two embeddings."""
-        e1 = np.array(embedding1, dtype=np.float32)
-        e2 = np.array(embedding2, dtype=np.float32)
-
-        norm1 = np.linalg.norm(e1)
-        norm2 = np.linalg.norm(e2)
-
-        if norm1 == 0 or norm2 == 0:
-            return 0.0
-
-        return float(np.dot(e1, e2) / (norm1 * norm2))
