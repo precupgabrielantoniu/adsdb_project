@@ -13,7 +13,7 @@ from config import CHROMA_PATH
 from tasks.T2_MMS import MultiModalSearchService
 
 #Find the two collections from the persistent chromadb client
-@st.cache_resource(show_spinner="Loading model… Please wait")
+@st.cache_resource(show_spinner="Loading… Please wait")
 def get_multimodalsearch_service():
     return MultiModalSearchService()
 

@@ -69,7 +69,7 @@ elif modality == "🖼️ Image":
 
     if uploaded_image is not None:
         img = Image.open(BytesIO(uploaded_image.read()))
-        st.image(img, caption=uploaded_image.name, use_column_width="auto")
+        st.image(img, caption=uploaded_image.name)
 
         if st.button("🔍 Find Similar Images", key="image_search"):
             uploaded_image.seek(0)
@@ -85,7 +85,7 @@ elif modality == "🖼️ Image":
                         try:
                             img_bytes = s3.get_object(Bucket="exploitation-zone", Key=key)["Body"].read()
                             img = Image.open(BytesIO(img_bytes))
-                            st.image(img, caption=f"Match: {score:.0%}", use_column_width="stretch")
+                            st.image(img, caption=f"Match: {score:.0%}")
                         except Exception as e:
                             st.error(f"Could not load image: {e}")
             else:
